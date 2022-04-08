@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_PROD")
+}
+
+model Group {
+  id        String    @id
+  name      String
+  password  String
+  createdAt DateTime  @default(now())
+  messages  Message[]
+  adminId   Int
+  user      User[]
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  text       String?
+  audio      String?
+  audioTrans String?  @db.VarChar(2000)
+  audioTime  Json?
+  sender     User     @relation(fields: senderId, references: [id])
+  senderId   Int
+  createdAt  DateTime @default(now())
+  reciever   Group    @relation(fields: recieverId, references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recieverId String
+  anonymous  Boolean  @default(false)
+}
+
+model User {
+  fullname  String?
+  email     String?   @unique
+  password  String?
+  id        Int       @id @unique @default(autoincrement())
+  verified  Int       @default(0)
+  nickname  String?
+  Message   Message[]
+  Group     Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull, onUpdate: SetNull)
+  groupId   String?
+  createdAt DateTime  @default(now())
+  Profile   Profile[]
+}
+
+model Profile {
+  id     Int     @id @default(autoincrement())
+  user   User    @relation(fields: userId, references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId Int     @unique
+  bio    String?
+  phone  String?
+  image  String?
+}
